@@ -1,0 +1,41 @@
+{
+  "name": "nodebee-frontend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node server/index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/netbymatt/nodebee-frontend.git"
+  },
+  "keywords": [
+    "node",
+    "nodejs",
+    "ecobee",
+    "mysql",
+    "logging",
+    "display",
+    "frontend"
+  ],
+  "author": "Matt Walsh",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/netbymatt/nodebee-frontend/issues"
+  },
+  "homepage": "https://github.com/netbymatt/nodebee-frontend#readme",
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "express": "^4.17.1",
+    "express-validator": "^6.8.0",
+    "luxon": "^1.25.0",
+    "mysql2": "^2.2.5"
+  },
+  "devDependencies": {
+    "eslint": "^7.16.0",
+    "eslint-config-airbnb-base": "^14.2.1",
+    "eslint-plugin-import": "^2.22.1"
+  }
+}
