@@ -4,7 +4,7 @@ $(() => {
 	nodebee.init();
 });
 
-/* global luxon, table, Plotly, config */
+/* global luxon, table, Plotly, config, chart */
 
 const nodebee = (() => {
 	const { DateTime } = luxon;	// alias object
