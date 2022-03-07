@@ -360,7 +360,7 @@ const nodebee = (() => {
 	};
 
 	// plot data, public
-	const plotData = (dataToPlot) => {
+	const plotData = (dataToPlot, xRange) => {
 		// y axis max is based on the plot type
 		let yAxisMax = 5;	// default, 5 minutes
 		if (metaData.hourly) yAxisMax = 60; // hours
@@ -370,8 +370,8 @@ const nodebee = (() => {
 		const chart = document.getElementById('chart');
 
 		// determine range of data to plot
-		let rangeXMin = DateTime.fromMillis(metaData.minTimestamp).toISO();
-		const rangeXMax = DateTime.fromMillis(metaData.maxTimestamp).toISO();
+		let rangeXMin = xRange?.[0] ?? DateTime.fromMillis(metaData.minTimestamp).toISO();
+		const rangeXMax = xRange?.[1] ?? DateTime.fromMillis(metaData.maxTimestamp).toISO();
 		if (firstLoad) {
 			rangeXMin = DateTime.local().minus({ days: 1 }).startOf('day').toISO();
 		}
@@ -592,7 +592,7 @@ const nodebee = (() => {
 	// occupancy on = show series only when occupancy sensor is triggered
 	const toggleOccup = () => {
 		// redraw plot the called function references the state of the checkbox to show or hide occupancy info
-		plotData(buildDataSet());
+		plotData(buildDataSet(), chart.layout.xaxis.range);
 	};
 
 	// public api
