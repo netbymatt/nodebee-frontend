@@ -95,13 +95,6 @@ const config = (() => {
 		// determine which date picker was clicked
 		switch (inst.id) {
 		case 'startdate':
-		default:
-			// adjust to beginning of day
-			inst.input.datepicker('setDate', dt.startOf('day').toLocaleString());
-			// fix limits on end date
-			adjustEndDates();
-			break;
-
 		case 'enddate':
 			// adjust to end of day
 			inst.input.datepicker('setDate', dt.endOf('day').toLocaleString());
@@ -109,6 +102,12 @@ const config = (() => {
 			// end date does not enforce limits on start date so any date can be chosen
 			// the limit provided in metadata does apply, however and is set at init
 
+			break;
+		default:
+			// adjust to beginning of day
+			inst.input.datepicker('setDate', dt.startOf('day').toLocaleString());
+			// fix limits on end date
+			adjustEndDates();
 			break;
 		}
 	};
@@ -146,11 +145,6 @@ const config = (() => {
 
 		// calculate start and end points
 		switch (obj.val()) {
-		default:
-		case 'Today':
-			startDate = now.startOf('day');
-			endDate = now.endOf('day');
-			break;
 		case '24 Hours':
 			startDate = now.plus({ hour: -24 });
 			endDate = now;
@@ -167,6 +161,11 @@ const config = (() => {
 		case 'This Week':
 			endDate = now.endOf('day');
 			startDate = now.plus({ day: -6 }).startOf('day');
+			break;
+		case 'Today':
+		default:
+			startDate = now.startOf('day');
+			endDate = now.endOf('day');
 			break;
 		}
 

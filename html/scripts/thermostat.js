@@ -582,7 +582,7 @@ const nodebee = (() => {
 			table.toggleTable(false);
 		} else {
 			// calculate and show the table
-			// TODO
+			table.updateTable();
 			// table.showTable(data, legends, visible, yaxes);
 			$('#tooltip').hide();
 		}
