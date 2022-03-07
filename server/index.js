@@ -1,6 +1,10 @@
 // get configuration
 const express = require('express');
 const config = require('../utils/loadconfig');
+const updateVendor = require('./updatevendor');
+
+// update vendor scripts
+updateVendor();
 
 // start a web server
 
