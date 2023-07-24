@@ -4,7 +4,9 @@ const config = require('../utils/loadconfig');
 const updateVendor = require('./updatevendor');
 
 // update vendor scripts
-updateVendor();
+if (process.env.NODE_ENV !== 'production') {
+	updateVendor();
+}
 
 // start a web server
 
