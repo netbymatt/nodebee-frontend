@@ -20,7 +20,6 @@
 			"**/*.code-search": true,
 			"dist/**": true,
 			"**/*.min.js": true,
-			"**/vendor": true,
 		},
 		"cSpell.enabled": true,
 		"cSpell.words": [

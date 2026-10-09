@@ -4,14 +4,8 @@ import compression from 'compression';
 import helmet from 'helmet';
 import config from '../utils/loadconfig.mjs';
 import db from './sqlconnection.mjs';
-import updateVendor from './updatevendor.mjs';
 import dataRouter from './data.mjs';
 import systemRouter from './system.mjs';
-
-// update vendor scripts
-if (process.env.NODE_ENV !== 'production') {
-	await updateVendor();
-}
 
 // start a web server
 const app = express();

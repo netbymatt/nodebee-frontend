@@ -8,24 +8,9 @@ import globals from 'globals';
 
 const gitignorePath = path.resolve('.', '.gitignore');
 
-const jsConfig = defineConfig([
-	// ESLint recommended config
-	{
-		name: 'js/config',
-		...js.configs.recommended,
-	},
-	// Stylistic plugin
-	plugins.stylistic,
-	// Import X plugin
-	plugins.importX,
-	// Airbnb base recommended config
-	...configs.base.recommended,
-]);
-
+// node rules apply to everything except the browser code in html/
 const nodeConfig = defineConfig([
-	// Node plugin
 	plugins.node,
-	// Airbnb Node recommended config
 	...configs.node.recommended,
 ]).map((config) => ({
 	...config,
@@ -34,22 +19,8 @@ const nodeConfig = defineConfig([
 
 const rules = {
 	'@stylistic/indent': ['error', 'tab', { SwitchCase: 1 }],
-	'@stylistic/no-tabs': 0,
-	'no-param-reassign': [
-		'error',
-		{
-			props: false,
-		},
-	],
-	'@stylistic/max-len': 0,
-	'no-underscore-dangle': [
-		'error',
-		{
-			allowAfterThis: true,
-		},
-	],
-	'import-x/no-useless-path-segments': 0,
-	'no-bitwise': 0,
+	'@stylistic/no-tabs': 'off',
+	'@stylistic/max-len': 'off',
 	'import-x/extensions': [
 		'error',
 		'ignorePackages',
@@ -62,42 +33,30 @@ const rules = {
 	'no-console': 'off',
 };
 
-const languageOptions = {
-	ecmaVersion: 'latest',
-	parserOptions: {
-		ecmaVersion: 'latest',
-	},
-};
-
-const ignores = [
-	'**/flot/**',
-	'**/*.min.*',
-	'**/vendor/**',
-	'dist',
-];
-
-const htmlSpecial = {
-	files: ['html/**/*.{js,mjs,cjs}'],
+// frontend scripts run in the browser with these libraries loaded from cdns
+const htmlConfig = {
+	files: ['html/**/*.mjs'],
 	languageOptions: {
 		globals: {
 			...globals.browser,
+			...globals.jquery,
+			luxon: 'readonly',
+			Plotly: 'readonly',
 		},
 	},
 };
 
 export default defineConfig([
-	{
-		ignores,
-	},
-	// Ignore files and folders listed in .gitignore
 	includeIgnoreFile(gitignorePath),
-	// JavaScript config
-	...jsConfig,
-	// Node config
+	js.configs.recommended,
+	plugins.stylistic,
+	plugins.importX,
+	...configs.base.recommended,
 	...nodeConfig,
 	{
-		languageOptions,
+		// airbnb sets an older parser ecmaVersion, override it
+		languageOptions: { parserOptions: { ecmaVersion: 'latest' } },
 		rules,
 	},
-	htmlSpecial,
+	htmlConfig,
 ]);

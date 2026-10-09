@@ -2,15 +2,13 @@
 	<head>
 		<title>Climate Control</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-		<link rel="stylesheet" href="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/themes/overcast/jquery-ui.css">
-		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
+		<script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
+		<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.2/themes/overcast/jquery-ui.css">
+		<script src="https://code.jquery.com/ui/1.14.2/jquery-ui.min.js"></script>
 
-		<script src="https://cdn.plot.ly/plotly-latest.min.js" type="text/javascript"></script>
-		<script src="scripts/vendor/luxon.min.js" type="text/javascript"></script>
-		<script src="scripts/thermostat.js" type="text/javascript"></script>
-		<script src="scripts/config.js" type="text/javascript"></script>
-		<script src="scripts/table.js" type="text/javascript"></script>
+		<script src="https://cdn.plot.ly/plotly-4.1.2.min.js" type="text/javascript"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/3.7.2/luxon.min.js" type="text/javascript"></script>
+		<script src="scripts/thermostat.mjs" type="module"></script>
 		<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.10.0/css/all.css">
 		<link rel="stylesheet" href="css/style.css" type="text/css"/>
 	</head>
@@ -65,6 +63,7 @@
 					<input type="button" class="config-fixed-time" id="config-yesterday" value="Yesterday">
 					<input type="button" class="config-fixed-time" id="config-yesterday-today" value="Yesterday + Today">
 					<input type="button" class="config-fixed-time" id="config-this-week" value="This Week">
+					<input type="button" class="config-fixed-time" id="config-30-days" value="30 Days">
 				</div>
 				<div>
 					<input type="button" id="config-update" value="Update" class="dialog-right">

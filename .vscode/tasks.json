@@ -9,6 +9,15 @@
 			],
 			"label": "npm: lint:server",
 			"detail": "npx eslint server/"
+		},
+		{
+			"type": "npm",
+			"script": "lint:html",
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"label": "npm: lint:html",
+			"detail": "npx eslint html/"
 		}
 	]
 }

@@ -11,11 +11,12 @@ body {
 	position: absolute;
 }
 #table {
-	width: 800px;
-	height: 600px;
+	width: 100%;
+	height: calc(100% - 50px);
 	top: 50px;
 	position: absolute;
-	left: -10000;
+	left: -10000px;
+	overflow: auto;
 }
 .tickLabel
 {
@@ -98,7 +99,9 @@ body
 }
 .data-table
 {
-	margin-top: 50px;
+	/* separate borders so they stay on the sticky header and footer */
+	border-collapse: separate;
+	border-spacing: 0;
 }
 .data-table th
 {
@@ -106,6 +109,20 @@ body
 	text-transform: capitalize;
 	font-size: 0.75em;
 	text-align: right;
+	padding: 4px;
+	background: #FFFFFF;
+}
+.data-table > thead th
+{
+	position: sticky;
+	top: 0;
+	border-bottom: 1px solid black;
+}
+.data-table > tfoot th
+{
+	position: sticky;
+	bottom: 0;
+	border-top: 1px solid black;
 }
 .data-table td
 {
@@ -117,7 +134,7 @@ body
 {
 	background: #EEEEEE;
 }
-.data-table-new-day
+.data-table-new-day > td
 {
 	border-top: 2px solid black;
 }
