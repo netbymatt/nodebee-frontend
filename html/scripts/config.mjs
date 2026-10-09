@@ -1,3 +1,5 @@
+import settings from './settings.mjs';
+
 const config = (() => {
 	// local variables
 	const { DateTime } = luxon;	// local alias
@@ -55,9 +57,12 @@ const config = (() => {
 			.datepicker('option', 'buttonText', dt.toLocaleString());
 		adjustEndDates();
 
-		// checkboxes
-		$('#checkbox-daily').prop('checked', nodebee.getInfo('daily')).checkboxradio('refresh');
-		$('#checkbox-hourly').prop('checked', nodebee.getInfo('hourly')).checkboxradio('refresh');
+		// interval
+		let interval = 'minute';
+		if (nodebee.getInfo('hourly')) interval = 'hourly';
+		if (nodebee.getInfo('daily')) interval = 'daily';
+		$(`#interval-${interval}`).prop('checked', true);
+		$('input[name=interval]').checkboxradio('refresh');
 	};
 
 	// date selected, private
@@ -87,93 +92,70 @@ const config = (() => {
 		}
 	};
 
+	// quick range, public
+	// start and end DateTimes for a quick link, calculated from now
+	const quickRange = (name) => {
+		const now = DateTime.local();
+		switch (name) {
+			case '24 Hours':
+				return { start: now.plus({ hour: -24 }), end: now };
+			case 'Yesterday': {
+				const start = now.plus({ day: -1 }).startOf('day');
+				return { start, end: start.endOf('day') };
+			}
+			case 'Yesterday + Today':
+				return { start: now.plus({ day: -1 }).startOf('day'), end: now };
+			case '7 Days':
+				return { start: now.plus({ day: -6 }).startOf('day'), end: now.endOf('day') };
+			case '30 Days':
+				// past 30 days including today
+				return { start: now.plus({ day: -29 }).startOf('day'), end: now.endOf('day') };
+			case 'Today':
+			default:
+				return { start: now.startOf('day'), end: now.endOf('day') };
+		}
+	};
+
 	// update configuration and close dialog
-	const updateConfig = (flag24Hours) => {
+	// quick is the name of a quick link, otherwise the dates are read from the date pickers
+	const updateConfig = (quick) => {
 		// close the dialog box
 		$('#dialog').dialog('close');
 
-		// grab hourly and daily checkboxes
-		const hourly = $('#checkbox-hourly').prop('checked');
-		const daily = $('#checkbox-daily').prop('checked');
+		const interval = $('input[name=interval]:checked').val() ?? 'minute';
 
-		// determine type
 		// get selected date and time, shift to begining and end of day
-		let startDate = DateTime.fromJSDate($('#startdate').datepicker('getDate')).startOf('day');
-		let endDate = DateTime.fromJSDate($('#enddate').datepicker('getDate')).endOf('day');
-		// special case for 24 hours since the date time picker only holds dates (not times)
-		if (flag24Hours === true) {
-			// calculate previous 24 hours from now
-			startDate = DateTime.local().plus({ hour: -24 });
-			endDate = DateTime.local();
-		}
-		// request is made in seconds since epoch, maximum duration of 7 days is checked by php script
-		nodebee.getData($('#thermostats').val(), Math.floor(startDate.valueOf()), Math.floor(endDate.valueOf()), hourly, daily);
+		// quick links are calculated directly since the date pickers only hold dates (not times)
+		const { start, end } = typeof quick === 'string'
+			? quickRange(quick)
+			: {
+				start: DateTime.fromJSDate($('#startdate').datepicker('getDate')).startOf('day'),
+				end: DateTime.fromJSDate($('#enddate').datepicker('getDate')).endOf('day'),
+			};
+		const thermostat = $('#thermostats').val();
+
+		// remember the choices, quick links are stored by name so they are recalculated on the next visit
+		settings.save({
+			thermostat,
+			interval,
+			range: typeof quick === 'string' ? { quick } : { start: start.toMillis(), end: end.toMillis() },
+		});
+
+		// request is made in milliseconds since epoch, the maximum duration is checked by the server
+		nodebee.getData(thermostat, start.toMillis(), end.toMillis(), interval === 'hourly', interval === 'daily');
 	};
 
 	// fixed time select
 	const fixedTimeSelect = (e) => {
-		const obj = $(e.currentTarget);
-		const now = DateTime.local();
-		let startDate;
-		let endDate;
-		let flag24Hours = false;
-
-		// calculate start and end points
-		switch (obj.val()) {
-			case '24 Hours':
-				startDate = now.plus({ hour: -24 });
-				endDate = now;
-				flag24Hours = true; // date time picker objects only hold dates, not times
-				break;
-			case 'Yesterday':
-				startDate = now.plus({ day: -1 }).startOf('day');
-				endDate = startDate.endOf('day');
-				break;
-			case 'Yesterday + Today':
-				startDate = now.plus({ day: -1 }).startOf('day');
-				endDate = now;
-				break;
-			case 'This Week':
-				endDate = now.endOf('day');
-				startDate = now.plus({ day: -6 }).startOf('day');
-				break;
-			case '30 Days':
-				// past 30 days including today
-				endDate = now.endOf('day');
-				startDate = now.plus({ day: -29 }).startOf('day');
-				break;
-			case 'Today':
-			default:
-				startDate = now.startOf('day');
-				endDate = now.endOf('day');
-				break;
-		}
+		const name = $(e.currentTarget).val();
+		const { start, end } = quickRange(name);
 
 		// update date picker
-		$('#startdate').datepicker('setDate', startDate.toLocaleString());
-		$('#enddate').datepicker('setDate', endDate.toLocaleString());
+		$('#startdate').datepicker('setDate', start.toLocaleString());
+		$('#enddate').datepicker('setDate', end.toLocaleString());
 		adjustEndDates();
 		// for convenience, call the update button (closes dialog)
-		updateConfig(flag24Hours);
-	};
-
-	// exclusive grouping, private
-	// ensure that hourly and daily are not both checked at the same time
-	const exclusiveGrouping = (e) => {
-		let otherCheckbox;
-		// see if this is checked
-		if ($(e.currentTarget).prop('checked')) {
-			// uncheck the other value
-			switch ($(e.currentTarget).val()) {
-				case 'daily':
-					otherCheckbox = $('#checkbox-hourly');
-					break;
-				case 'hourly':
-				default:
-					otherCheckbox = $('#checkbox-daily');
-			}
-			otherCheckbox.prop('checked', false).checkboxradio('refresh');
-		}
+		updateConfig(name);
 	};
 
 	// initialize function
@@ -212,13 +194,12 @@ const config = (() => {
 			onSelect: dateSelected,
 		});
 
-		// hourly, daily checkbox
-		$('.dialog-right input').checkboxradio()
-			.on('click', exclusiveGrouping);
+		// 5 minute, hourly, daily
+		$('input[name=interval]').checkboxradio();
 
 		// update button
 		$('#config-update').button()
-			.on('click', updateConfig);
+			.on('click', () => updateConfig());
 
 		// fixed time selector buttons
 		$('.config-fixed-time').button()
@@ -244,6 +225,7 @@ const config = (() => {
 	// public api
 	return {
 		init,
+		quickRange,
 		listThermostats,
 		setThermostat,
 	};

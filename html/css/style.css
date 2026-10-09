@@ -46,7 +46,8 @@ body
 	top: 2px;
 	left: 2px;
 }
-.touch-button
+.touch-button,
+.top-right label
 {
 	padding: 10px;
 	margin: 5px;
@@ -84,15 +85,6 @@ body
 .legend .legendLayer .background {
 	fill: rgba(255,255,255,1);
 }
-.legend-color-box
-{
-	height: 10px;
-	width: 30px;
-	display: inline-block;
-	vertical-align: middle;
-	margin: 10px;
-	border-radius: 5px;
-}
 .ui-effects-transfer
 {
 	border: 1px dotted black;
@@ -124,21 +116,76 @@ body
 	bottom: 0;
 	border-top: 1px solid black;
 }
+/* the timestamp column stays on the left when scrolling sideways */
+.data-table > tbody > tr > th
+{
+	position: sticky;
+	left: 0;
+	z-index: 1;
+	font-family: monospace;
+	font-size: 1em;
+	font-weight: normal;
+	text-transform: none;
+	white-space: pre;
+	padding: 0 4px;
+	border-right: 1px solid #CCCCCC;
+}
+.data-table > thead th:first-child,
+.data-table > tfoot th:first-child
+{
+	left: 0;
+	z-index: 2;
+}
 .data-table td
 {
 	font-family: monospace;
 	text-align: right;
 	border-right: 1px solid #EEEEEE;
 }
-.data-table-odd-hour
+.data-table-odd-hour,
+.data-table-odd-hour > th
 {
 	background: #EEEEEE;
 }
-.data-table-new-day > td
+.data-table-new-day > td,
+.data-table-new-day > th
 {
 	border-top: 2px solid black;
 }
-.data-table td table
+#loading
 {
-	float:right;
+	display: none;
+	position: absolute;
+	top: 12px;
+	left: 50%;
+	transform: translateX(-50%);
+	z-index: 10;
+	padding: 6px 12px;
+	border-radius: 4px;
+	background: rgba(255, 255, 255, 0.9);
+	box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+#loading.active
+{
+	display: block;
+}
+#dialog-config fieldset
+{
+	border: none;
+	margin: 0;
+	padding: 0;
+}
+#dialog-config legend
+{
+	padding: 0;
+	margin-bottom: 2px;
+}
+.legend-swatch
+{
+	display: inline-block;
+	width: 24px;
+	height: 10px;
+	margin-right: 6px;
+	border-radius: 5px;
+	vertical-align: middle;
 }

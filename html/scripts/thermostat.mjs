@@ -3,6 +3,11 @@ import config from './config.mjs';
 import table from './table.mjs';
 import enableXLimits from './xlimit.mjs';
 import enablePinchZoom from './pinchzoom.mjs';
+import settings from './settings.mjs';
+
+// plotly's default colors, assigned to series without a fixed color by their position when every series is shown
+// so a series keeps its color when others are hidden
+const COLORWAY = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f', '#bcbd22', '#17becf'];
 
 const nodebee = (() => {
 	const { DateTime } = luxon;	// alias object
@@ -19,7 +24,8 @@ const nodebee = (() => {
 	let seriesInfo = [];	// information about each series to plot
 	let visible = [];	// show this series
 	let firstLoad = true;
-	const colors = [];	// stores colors of each series on the first run
+	let zoomOnFirstLoad = true;	// show only yesterday and today on the first load unless a range was remembered
+	let loadingCount = 0;	// requests in progress
 
 	// produce a loop with all sensors in the same order, with separate callbacks for sensors and thermostats
 	// thermostat(name, id)
@@ -119,6 +125,8 @@ const nodebee = (() => {
 			rawValues = rawData.sensor;
 			columns = rawData.sensorColumns;
 		}
+		// no rows were returned for this table
+		if (columns.length === 0) return { values: [], column: -1 };
 		// determine column
 		const column = columns.indexOf(series.column);
 		if (column === -1) throw new Error(`Unable to find column: ${series.name}-${series.column}`);
@@ -152,8 +160,8 @@ const nodebee = (() => {
 	const filterOccupancy = (myData, name) => {
 		// check if dataset has occupancy info
 		const occupPresent = seriesInfo.findIndex((element) => element.name === `${name} occupancy`);
-		// if no occupancy info return immediately
-		if (!occupPresent) return myData;
+		// if no occupancy info return immediately, occupancy is not available for hourly and daily data
+		if (occupPresent === -1 || !data[occupPresent]) return myData;
 		// if occupancy option is off return immediately
 		if (!$('#occup-touch').is(':checked')) return myData;
 
@@ -199,6 +207,30 @@ const nodebee = (() => {
 		return undefined;
 	};
 
+	// series style, private
+	// the color for the series at index i of seriesInfo, either a fixed color or one from the colorway
+	const seriesStyle = (i) => {
+		const series = seriesInfo[i];
+		const fixed = colorByLegend(series.name);
+		if (fixed) return fixed;
+		const position = seriesInfo.slice(0, i).filter((s) => s.type !== 'occup').length;
+		return { line: { color: COLORWAY[position % COLORWAY.length] } };
+	};
+
+	// series color, private
+	// the color that is plotted for the series at index i of seriesInfo
+	const seriesColor = (i) => {
+		const style = seriesStyle(i);
+		return (style.marker ?? style.line).color;
+	};
+
+	// hover template, private
+	// shows each value with its units, equipment is minutes of runtime per interval or hours per day
+	const hoverTemplate = (type) => {
+		if (type === 'equip') return `%{fullData.name}: %{y} ${metaData.daily ? 'h' : 'min'}<extra></extra>`;
+		return '%{fullData.name}: %{y:.1f} °F<extra></extra>';
+	};
+
 	// get bar type, private
 	// returns bar type based on plot type
 	const getBarType = (plotType) => {
@@ -235,8 +267,9 @@ const nodebee = (() => {
 				y,
 				name: series.name,
 				yaxis: getAxisNum(series.type),
+				hovertemplate: hoverTemplate(series.type),
 				...getBarType(series.type),
-				...colorByLegend(series.name),
+				...seriesStyle(i),
 			};
 			// filter for data that is visible
 		});
@@ -299,7 +332,7 @@ const nodebee = (() => {
 		// determine range of data to plot
 		let rangeXMin = xRange?.[0] ?? DateTime.fromMillis(metaData.minTimestamp).toISO();
 		const rangeXMax = xRange?.[1] ?? DateTime.fromMillis(metaData.maxTimestamp).toISO();
-		if (firstLoad) {
+		if (firstLoad && zoomOnFirstLoad) {
 			rangeXMin = DateTime.local().minus({ days: 1 }).startOf('day').toISO();
 		}
 
@@ -308,7 +341,8 @@ const nodebee = (() => {
 			title: { text: systemInfo[activeThermostat].name },
 			showlegend: false,
 			barmode: 'overlay',
-			hovermode: 'closest',
+			// one hover label with every value at that time
+			hovermode: 'x unified',
 			dragmode: 'pan',
 			margin: {
 				l: 30, r: 30, b: 40, t: 30,
@@ -333,8 +367,6 @@ const nodebee = (() => {
 					],
 				},
 				showgrid: true,
-				gridwidth: 2,
-				gridcolor: '#0000A0',
 				// rangeslider: { range: [DateTime.fromMillis(metaData.minTimestamp).toISO(), DateTime.fromMillis(metaData.maxTimestamp).toISO()], bgcolor: '#eee' },
 				type: 'date',
 				hoverformat: '%m/%d %I:%M %p',
@@ -366,8 +398,8 @@ const nodebee = (() => {
 		const plotConfig = {
 			responsive: true,
 			scrollZoom: true,
-			displaylogo: false,
-			modeBarButtonsToRemove: ['select2d', 'lasso2d', 'autoscale2d', 'toggleSpikelines', 'hoverClosestCartesian', 'hoverCompareCartesian'],
+			// pan, scroll and pinch cover zooming so the toolbar isn't needed, it also covered the title on phones
+			displayModeBar: false,
 		};
 
 		Plotly.react(chart, dataToPlot, layout, plotConfig);
@@ -378,47 +410,71 @@ const nodebee = (() => {
 		firstLoad = false;
 	};
 
+	// show error, private
+	const showError = (message) => {
+		// hide everything in the dialog box
+		$('.dialog-hidden').hide(0);
+		// show only the error div
+		$('#dialog-error').text(message).show(0);
+		// show the dialog
+		$('#dialog').dialog('open').dialog('option', 'title', 'Error');
+	};
+
+	// set loading, private
+	// shows the loading indicator while any request is in progress
+	const setLoading = (loading) => {
+		loadingCount += loading ? 1 : -1;
+		$('#loading').toggleClass('active', loadingCount > 0);
+	};
+
 	// format data, private
 	// formats the minified data into proper pairs and timestamps
 	const formatData = (json) => {
-		// test for error condition and post to user
-		if (typeof json.error !== 'undefined') {
-			// hide everything in the dialog box
-			$('.dialog-hidden').hide(0);
-			// show only the error div
-			$('#dialog-error').text(json.error).show(0);
-			// show the dialog
-			$('#dialog').dialog('open').dialog('option', 'title', 'Error!');
+		// the server responds with no content when there is no data in the requested range
+		if (!json) {
+			showError('No data was found for the selected dates.');
 			return;
 		}
+		// test for error condition and post to user
+		if (typeof json.error !== 'undefined') {
+			showError(json.error);
+			return;
+		}
+		// a table with no rows in the range is sent as an empty object
+		const empty = { columnNames: [], data: [] };
+		const thermostatData = json.thermostat.data ? json.thermostat : empty;
+		const sensorData = json.sensor.data ? json.sensor : empty;
+
 		// clear out old data, visible is maintained
 		data = [];
 
 		// parse the data
 		seriesInfo = makeSeriesInfo(systemInfo);
 		const rawData = {
-			thermostat: expandTimestamps(json.thermostat.data, 0),
-			sensor: expandTimestamps(json.sensor.data, 0),
-			thermostatColumns: json.thermostat.columnNames,
-			sensorColumns: json.sensor.columnNames,
+			thermostat: expandTimestamps(thermostatData.data, 0),
+			sensor: expandTimestamps(sensorData.data, 0),
+			thermostatColumns: thermostatData.columnNames,
+			sensorColumns: sensorData.columnNames,
 		};
 
-		// set up visibility for first run if necessary
-		visible = seriesInfo.map((val, i) => ((firstLoad || visible[i] === undefined) ? true : visible[i]));
+		// set up visibility for first run if necessary, restoring any series that were turned off on a previous visit
+		const hidden = settings.load().hidden ?? [];
+		visible = seriesInfo.map((series, i) => ((firstLoad || visible[i] === undefined) ? !hidden.includes(series.name) : visible[i]));
 
 		// extract the plot options
 		metaData.hourly = json.hourly;
 		metaData.daily = json.daily;
-		// set visibility of occupancy button
-		if ($('#occup-touch').is(':visible') === (metaData.hourly || metaData.daily)) {
-			$('#occup-touch').parent().fadeToggle();
+		// occupancy is only available in the 5 minute data, hide its button otherwise
+		const $occupancy = $('label[for=occup-touch]');
+		if ($occupancy.is(':visible') === (metaData.hourly || metaData.daily)) {
+			$occupancy.fadeToggle();
 		}
 
 		metaData.oldestData = json.oldestTimestamp;
 
 		// populate initial min and max
-		metaData.minTimestamp = scanAllData([[0, json.thermostat.data], [0, json.sensor.data]], (a, b) => Math.min(a, b), Infinity);
-		metaData.maxTimestamp = scanAllData([[0, json.thermostat.data], [0, json.sensor.data]], (a, b) => Math.max(a, b), 0);
+		metaData.minTimestamp = scanAllData([[0, thermostatData.data], [0, sensorData.data]], (a, b) => Math.min(a, b), Infinity);
+		metaData.maxTimestamp = scanAllData([[0, thermostatData.data], [0, sensorData.data]], (a, b) => Math.max(a, b), 0);
 
 		// loop through each series and format data as {x: [x1, x2, ...], y: [y1, y2, ...]} pair
 		data = seriesInfo.map((series) => {
@@ -453,6 +509,7 @@ const nodebee = (() => {
 		}
 		// get the saved thermostat
 		const thermostat = activeThermostat;
+		setLoading(true);
 		try {
 			const runtimeData = await $.ajax({
 				url: 'data',
@@ -469,8 +526,15 @@ const nodebee = (() => {
 			});
 			formatData(runtimeData);
 		} catch (e) {
-			console.log('Get data failed!');
-			console.log(e);
+			console.error(e);
+			// ajax failures have a status, anything else happened while displaying the data
+			if (e.status !== undefined) {
+				showError(`Unable to load data from the server (${e.status ? `${e.status} ${e.statusText}` : 'no response'}).`);
+			} else {
+				showError(`Unable to display the data: ${e.message}`);
+			}
+		} finally {
+			setLoading(false);
 		}
 	};
 
@@ -489,6 +553,7 @@ const nodebee = (() => {
 
 	// get system info
 	const getSystem = async () => {
+		setLoading(true);
 		try {
 			const system = await $.ajax({
 				url: 'system',
@@ -497,28 +562,41 @@ const nodebee = (() => {
 				contentType: 'application/json',
 			});
 			systemInfo = readSystemInfo(system);
-			// default to the first thermostat
-			const [thermostat] = Object.keys(systemInfo);
-			getData(thermostat);
+
+			// use the remembered thermostat, range and interval, defaulting to the first thermostat and the server's default range
+			const saved = settings.load();
+			const thermostat = systemInfo[saved.thermostat] ? saved.thermostat : Object.keys(systemInfo)[0];
+			let start;
+			let end;
+			if (saved.range?.quick) {
+				const range = config.quickRange(saved.range.quick);
+				start = range.start.toMillis();
+				end = range.end.toMillis();
+			} else if (saved.range) {
+				({ start, end } = saved.range);
+			}
+			getData(thermostat, start, end, saved.interval === 'hourly', saved.interval === 'daily');
 			config.listThermostats(systemInfo);
 			config.setThermostat(thermostat);
 		} catch (e) {
-			console.log('Get system info failed');
-			console.log(e);
+			console.error(e);
+			showError('Unable to load the list of thermostats from the server.');
+		} finally {
+			setLoading(false);
 		}
 	};
 
-	// legend update, private
-	// read through checkboxes on legend display and update visible array
-	const legendUpdate = () => {
-		$('#dialog-legend input:checkbox').each((i, element) => {
-			visible[+element.value] = element.checked;
-		});
+	// legend change, private
+	// a series was turned on or off in the legend dialog, apply it immediately
+	const legendChange = (e) => {
+		visible[+e.currentTarget.value] = e.currentTarget.checked;
+
+		// remember which series are turned off
+		settings.save({ hidden: seriesInfo.filter((series, i) => !visible[i] && series.type !== 'occup').map((series) => series.name) });
 
 		// update the plot, keeping the current x range
 		plotData(buildDataSet(), document.getElementById('chart').layout.xaxis.range);
-		// close the dialog
-		$('#dialog').dialog('close');
+		table.updateTable(buildTableData());
 	};
 
 	// legend click, private
@@ -526,48 +604,30 @@ const nodebee = (() => {
 	const legendClick = () => {
 		// hide everything in the dialog box
 		$('.dialog-hidden').hide(0);
-		// show only the legend options
-		$('#dialog-legend').show(0);
 
-		// build the checkboxes
-		const html = seriesInfo.map((series, i) => {
-			if (series.type !== 'occup') {
-				return $('<div>')
-					.append(
-						$('<div>', { class: 'legend-color-box', id: `legend-color-box-${i}`, css: { background: colors[i] } }),
-					)
-					.append(
-						$('<input />', { type: 'checkbox', id: `legend-${i}`, value: i }),
-					)
-					.append(
-						$('<label />', { for: `legend-${i}`, text: series.name, id: `legend-label-${i}` }),
-					)
-					.prop('outerHTML');
-			}
-			return undefined;
-		});
-
-		// put checkboxes in div and make into ui controls
-		$('#dialog-legend').html(html.join(''))
-			.find('input')
-			.checkboxradio();
-
-		// append an update button
-		$('#dialog-legend').append(
-			$('<input />', {
-				type: 'button', id: 'legend-update', value: 'Update', class: 'dialog-right',
-			})
-				.on('click', legendUpdate)
-				.button(),
-		);
-
-		// assign checked state
+		// build the checkboxes, each with a swatch of the color that is plotted
+		const $legend = $('#dialog-legend').empty();
 		seriesInfo.forEach((series, i) => {
-			$(`#legend-${i}`).prop('checked', visible[i]).checkboxradio('refresh');
+			if (series.type === 'occup') return;
+			$legend.append($('<div>')
+				.append($('<input />', {
+					type: 'checkbox', id: `legend-${i}`, value: i, checked: visible[i],
+				}))
+				.append($('<label />', { for: `legend-${i}`, id: `legend-label-${i}` })
+					.append($('<span />', { class: 'legend-swatch', css: { background: seriesColor(i) } }))
+					.append(document.createTextNode(series.name))));
 		});
+
+		// make into ui controls
+		$legend.find('input')
+			.checkboxradio()
+			.on('change', legendChange);
+
+		// show only the legend options
+		$legend.show(0);
 
 		// show the dialog
-		$('#dialog').dialog('open').dialog('option', 'title', 'Series selection');
+		$('#dialog').dialog('open').dialog('option', 'title', 'Series');
 	};
 
 	// generate table, private
@@ -584,6 +644,7 @@ const nodebee = (() => {
 	// toggle occupancy, private
 	// occupancy on = show series only when occupancy sensor is triggered
 	const toggleOccup = () => {
+		settings.save({ occupancy: $('#occup-touch').is(':checked') });
 		// redraw plot the called function references the state of the checkbox to show or hide occupancy info
 		plotData(buildDataSet(), document.getElementById('chart').layout.xaxis.range);
 		table.updateTable(buildTableData());
@@ -591,6 +652,10 @@ const nodebee = (() => {
 
 	// init, pubic
 	const init = () => {
+		// a remembered range is shown in full instead of zooming to yesterday and today
+		const saved = settings.load();
+		zoomOnFirstLoad = !saved.range;
+
 		getSystem();
 		enablePinchZoom(document.getElementById('chart'));
 
@@ -601,9 +666,10 @@ const nodebee = (() => {
 		$('#table-touch').button()
 			.on('click', generateTable);
 
-		// occupancy button
-		$('#occup-touch').checkboxradio()
-			.on('click', toggleOccup);
+		// occupancy button, a toggle button without the checkbox icon
+		$('#occup-touch').prop('checked', !!saved.occupancy)
+			.checkboxradio({ icon: false })
+			.on('change', toggleOccup);
 	};
 
 	// parse axis date, private

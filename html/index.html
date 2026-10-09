@@ -1,7 +1,10 @@
-<html>
+<!doctype html>
+<html lang="en">
 	<head>
+		<meta charset="utf-8">
 		<title>Climate Control</title>
 		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌡️</text></svg>">
 		<script src="https://code.jquery.com/jquery-4.0.0.min.js"></script>
 		<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.2/themes/overcast/jquery-ui.css">
 		<script src="https://code.jquery.com/ui/1.14.2/jquery-ui.min.js"></script>
@@ -15,32 +18,36 @@
 	<body>
 		<div id="chart"></div>
 		<div id="table"></div>
+		<div id="loading" role="status"><i class="fas fa-spinner fa-spin"></i> Loading</div>
 		<div class="top-left">
-			<div class="touch-button" id="legend-touch">
-				<i class="fas fa-book"></i>
-			</div>
+			<button type="button" class="touch-button" id="legend-touch" title="Series" aria-label="Series">
+				<i class="fas fa-list"></i>
+			</button>
 		</div>
 		<div class="top-right">
-			<label for="occup-touch"><i class="fas fa-users"></i>
-				<input type="checkbox" name="occup-touch" id="occup-touch" value='active' class="touch-button">
-			</label>
-			<div class="touch-button" id="table-touch">
+			<label for="occup-touch" title="Only show room temperatures while occupied" aria-label="Only show room temperatures while occupied"><i class="fas fa-users"></i></label>
+			<input type="checkbox" name="occup-touch" id="occup-touch" value='active'>
+			<button type="button" class="touch-button" id="table-touch" title="Show table" aria-label="Show table">
 				<i class="fas fa-table"></i>
-			</div>
-			<div class="touch-button" id="config-touch">
+			</button>
+			<button type="button" class="touch-button" id="config-touch" title="Dates and thermostat" aria-label="Dates and thermostat">
 				<i class="fas fa-calendar-alt"></i>
-			</div>
+			</button>
 		</div>
 		<div id="dialog">
 			<div id="dialog-config" class="dialog-hidden">
-				<div class="dialog-right">
-					<label for="checkbox-hourly">Hourly
-						<input type="checkbox" name="checkbox-hourly" id="checkbox-hourly" value='hourly'>
+				<fieldset class="dialog-right">
+					<legend>Interval</legend>
+					<label for="interval-minute">5 Minute
+						<input type="radio" name="interval" id="interval-minute" value="minute">
 					</label>
-					<label for="checkbox-daily">Daily
-						<input type="checkbox" name="checkbox-daily" id="checkbox-daily" value='daily'>
+					<label for="interval-hourly">Hourly
+						<input type="radio" name="interval" id="interval-hourly" value="hourly">
 					</label>
-				</div>
+					<label for="interval-daily">Daily
+						<input type="radio" name="interval" id="interval-daily" value="daily">
+					</label>
+				</fieldset>
 				<div class="dialog-section">
 					Start Date:<br/>
 					<input type="input" id="startdate" class="datepicker">
@@ -62,7 +69,7 @@
 					<input type="button" class="config-fixed-time" id="config-24-hours" value="24 Hours">
 					<input type="button" class="config-fixed-time" id="config-yesterday" value="Yesterday">
 					<input type="button" class="config-fixed-time" id="config-yesterday-today" value="Yesterday + Today">
-					<input type="button" class="config-fixed-time" id="config-this-week" value="This Week">
+					<input type="button" class="config-fixed-time" id="config-7-days" value="7 Days">
 					<input type="button" class="config-fixed-time" id="config-30-days" value="30 Days">
 				</div>
 				<div>

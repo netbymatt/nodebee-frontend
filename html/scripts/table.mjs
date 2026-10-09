@@ -81,10 +81,8 @@ const table = (() => {
 			if (dt.hour % 2 === 1) classes.push('data-table-odd-hour');
 			lastDay = dt.day;
 
-			// timestamp (day of week, day, hour:minute)
-			const timestamp = `<td><table><tr><td>${dt.toLocaleString({ weekday: 'short' })}</td>`
-				+ `<td>${dt.toLocaleString({ month: 'short', day: '2-digit' })}</td>`
-				+ `<td>${dt.toLocaleString(DateTime.TIME_SIMPLE)}</td></tr></table></td>`;
+			// timestamp on one line (Fri 10/09  5:20pm), the time is padded so the columns line up in the monospace font
+			const timestamp = `<th scope="row">${dt.toFormat('ccc LL/dd')} ${dt.toFormat('h:mma').toLowerCase().padStart(7)}</th>`;
 			const cells = values.map((value, col) => `<td>${formatData(value, series[col].type)}</td>`).join('');
 
 			const rowClass = classes.length ? ` class="${classes.join(' ')}"` : '';
@@ -104,13 +102,17 @@ const table = (() => {
 		if (show) {
 			$('#table').css({ left: 0 });
 			$('#chart').css({ left: offscreen });
-			$('#table-touch').children().eq(0).addClass('fa-chart-line')
+			$('#table-touch').attr({ title: 'Show chart', 'aria-label': 'Show chart' })
+				.children().eq(0)
+				.addClass('fa-chart-line')
 				.removeClass('fa-table');
 			$('#legend-touch').hide(0);
 		} else {
 			$('#table').css({ left: offscreen });
 			$('#chart').css({ left: 0 });
-			$('#table-touch').children().eq(0).addClass('fa-table')
+			$('#table-touch').attr({ title: 'Show table', 'aria-label': 'Show table' })
+				.children().eq(0)
+				.addClass('fa-table')
 				.removeClass('fa-chart-line');
 			$('#legend-touch').show(0);
 		}
