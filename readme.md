@@ -2,6 +2,32 @@
 
 A frontend for data logged by [NodeBee](https://github.com/netbymatt/nodebee). The data is plotted using [Plotly](https://github.com/plotly/plotly.js/).
 
+## The chart
+The chart shows one thermostat at a time, with its name as the title.
+
+### Equipment (bars)
+Bars show how long the fan, cooling and heating ran. Heights are minutes of runtime in each 5 minute interval or hour, or hours of runtime per day when viewing daily data. The fan usually runs along with heating or cooling, so its bar overlaps theirs. The equipment axis isn't labelled, but hovering shows each value with its units.
+
+### Temperatures (lines, right axis in °F)
+- **Outside**: outdoor temperature reported to the thermostat.
+- **Setpoint**: the temperature the thermostat is aiming for, the cooling setpoint when the thermostat is in cool mode and the heating setpoint otherwise.
+- **Average**: the thermostat's average of its sensors, drawn as a wide faded line.
+- **Each room sensor**: one line per sensor, named as it is in the Ecobee app.
+
+Hover over the chart, or tap it on a phone, to see every value at that time in one label.
+
+### Intervals
+Data can be shown every 5 minutes, hourly or daily. Hourly and daily data are averages (temperatures) and totals (runtime) over each hour or day. Up to about a month of data can be loaded at once.
+
+## Using the app
+- **Pan and zoom**: drag to pan, scroll or pinch to zoom. The chart stays within the loaded data, load a different range to see other dates.
+- **Series** (list button, top left): turn individual series on and off. Each one is shown with its color on the chart.
+- **Occupancy** (people button): only show room temperatures while the room's occupancy sensor detects someone. Only available with 5 minute data.
+- **Table** (table button): the same data as a table, limited to the time range visible on the chart. Double click the table to select it for copying.
+- **Dates and thermostat** (calendar button): choose a start and end date, the interval and the thermostat, or use a quick link such as *7 Days* or *30 Days*.
+
+The thermostat, date range, interval, hidden series and occupancy setting are remembered in your browser for the next visit. Quick links are remembered by name, so *7 Days* always shows the most recent 7 days.
+
 ## Requirements
 This tool requires a dataset from [NodeBee](https://github.com/netbymatt/nodebee). Please follow the setup procedures there first as they are only referenced below.
 
