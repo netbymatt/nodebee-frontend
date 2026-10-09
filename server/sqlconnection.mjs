@@ -7,9 +7,11 @@ const db = mysql.createPool({
 	password: config.db.password,
 	database: config.db.name,
 	waitForConnections: true,
-	connectionLimit: 5,
+	connectionLimit: config.db.connections,
 	queueLimit: 0,
 	timezone: '+00:00',
+	// return DECIMAL values (such as from ROUND, SUM and AVG) as numbers instead of strings
+	decimalNumbers: true,
 });
 
 export default db;

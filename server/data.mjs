@@ -67,10 +67,8 @@ const queries = {
 	},
 };
 
-dataRouter.use(express.json());
-
 // errors are passed to express's default handler which logs them and responds with a 500
-dataRouter.use('/', validator, async (req, res) => {
+dataRouter.post('/', express.json(), validator, async (req, res) => {
 	// test for validation errors
 	const errors = validationResult(req);
 	if (!errors.isEmpty()) {
@@ -78,7 +76,7 @@ dataRouter.use('/', validator, async (req, res) => {
 		return;
 	}
 
-	// dest for date limits
+	// test for date limits
 	const { start, end } = dateCheck(req.body.startDate, req.body.endDate);
 
 	// pick the queries based on options provided
@@ -86,12 +84,12 @@ dataRouter.use('/', validator, async (req, res) => {
 	if (req.body.hourly) interval = 'hour';
 	if (req.body.daily) interval = 'day';
 
-	// set up paramaters
-	const paramaters = [req.body.thermostat, start.toJSDate(), end.toJSDate()];
+	// set up parameters
+	const parameters = [req.body.thermostat, start.toJSDate(), end.toJSDate()];
 
 	// get the data
-	const thermostatPromise = db.execute(queries[interval].thermostat, paramaters);
-	const sensorPromise = db.execute(queries[interval].sensor, paramaters);
+	const thermostatPromise = db.execute(queries[interval].thermostat, parameters);
+	const sensorPromise = db.execute(queries[interval].sensor, parameters);
 
 	// wait for the data
 	const [[thermostat], [sensor]] = await Promise.all([thermostatPromise, sensorPromise]);

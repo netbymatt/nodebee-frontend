@@ -5,7 +5,7 @@
   "main": "server/index.mjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server/index.mjs",
+    "start": "node --env-file-if-exists=.env server/index.mjs",
     "lint:server": "npx eslint server/",
     "lint:server:fix": "npx eslint server/ --fix",
     "lint:html": "npx eslint html/",
@@ -31,8 +31,10 @@
   },
   "homepage": "https://github.com/netbymatt/nodebee-frontend#readme",
   "dependencies": {
+    "compression": "^1.8.2",
     "express": "^5.3.0",
     "express-validator": "^7.0.0",
+    "helmet": "^8.3.0",
     "luxon": "^3.0.0",
     "mysql2": "^3.0.0"
   },
@@ -41,6 +43,9 @@
     "@eslint/js": "^9.39.5",
     "eslint": "^9.39.5",
     "eslint-config-airbnb-extended": "^3.1.1"
+  },
+  "engines": {
+    "node": ">=22.9.0"
   },
   "allowScripts": {
     "unrs-resolver@1.12.2": true

@@ -10,7 +10,7 @@ import db from './sqlconnection.mjs';
 const systemRouter = express.Router();
 
 // errors are passed to express's default handler which logs them and responds with a 500
-systemRouter.use('/', async (req, res) => {
+systemRouter.get('/', async (req, res) => {
 	// respond with formatted data
 	res.json(await systemInfo(db));
 });
