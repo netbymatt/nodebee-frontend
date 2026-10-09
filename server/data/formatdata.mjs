@@ -8,7 +8,7 @@
 // 	}
 // }
 
-const format = (data) => {
+const formatData = (data) => {
 	if (data.length === 0) return {};
 	// store a "last timestamp" to allow only differences to be sent to the client
 	// this saves bandwidth
@@ -37,4 +37,4 @@ const format = (data) => {
 	};
 };
 
-module.exports = format;
+export default formatData;

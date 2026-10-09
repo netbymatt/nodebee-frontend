@@ -1,17 +1,17 @@
 // get express
-const express = require('express');
-const bodyParser = require('body-parser');
-const { body, validationResult } = require('express-validator');
+import express from 'express';
+import bodyParser from 'body-parser';
+import { body, validationResult } from 'express-validator';
 
 // internal functions
-const dateCheck = require('./data/datecheck');
-const oldestTimestamp = require('./data/oldesttimestamp');
-const formatData = require('./data/formatdata');
+import dateCheck from './data/datecheck.mjs';
+import oldestTimestamp from './data/oldesttimestamp.mjs';
+import formatData from './data/formatdata.mjs';
 
 // get the database
-const connection = require('./sqlconnection');
+import db from './sqlconnection.mjs';
 
-const router = express.Router();
+const dataRouter = express.Router();
 
 // set up the data fields validator
 const validator = [
@@ -22,9 +22,9 @@ const validator = [
 	body('thermostat').isInt().toInt(),
 ];
 
-router.use(bodyParser.json());
+dataRouter.use(bodyParser.json());
 
-router.use('/', validator, async (req, res, next) => {
+dataRouter.use('/', validator, async (req, res, next) => {
 	try {
 		// test for validation errors
 		const errors = validationResult(req);
@@ -32,9 +32,6 @@ router.use('/', validator, async (req, res, next) => {
 
 		// dest for date limits
 		const { start, end } = dateCheck(req.body.startDate, req.body.endDate);
-
-		// get a database connection
-		const db = await connection;
 
 		// pick the view based on options provided
 		let viewName = 'Minute';
@@ -45,10 +42,14 @@ router.use('/', validator, async (req, res, next) => {
 		const paramaters = [req.body.thermostat, start.toJSDate(), end.toJSDate()];
 
 		// get the data
-		const thermostatPromise = db.execute(`SELECT * FROM Thermostat${viewName} WHERE thermostat_id = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC;`,
-			paramaters);
-		const sensorPromise = db.execute(`SELECT * FROM Sensor${viewName} WHERE thermostat_id = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC;`,
-			paramaters);
+		const thermostatPromise = db.execute(
+			`SELECT * FROM Thermostat${viewName} WHERE thermostat_id = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC;`,
+			paramaters,
+		);
+		const sensorPromise = db.execute(
+			`SELECT * FROM Sensor${viewName} WHERE thermostat_id = ? AND timestamp >= ? AND timestamp <= ? ORDER BY timestamp ASC;`,
+			paramaters,
+		);
 
 		// wait for the data
 		const [[thermostat], [sensor]] = await Promise.all([thermostatPromise, sensorPromise]);
@@ -71,6 +72,7 @@ router.use('/', validator, async (req, res, next) => {
 		// generic 500 error, logged locally
 		console.error(e);
 		next(e);
+		return false;
 	}
 });
-module.exports = router;
+export default dataRouter;

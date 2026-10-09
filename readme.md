@@ -46,7 +46,7 @@ PM2 is recommended to run the process in the background, and start it automatica
 npm install -g pm2
 
 # 2. start the nodebee process
-pm2 server/index.js --name nodebee-frontend
+pm2 server/index.mjs --name nodebee-frontend
 
 # 3. restart pm2 automatically
 pm2 startup

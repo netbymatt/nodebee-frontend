@@ -5,7 +5,7 @@ const timestamp = {
 	lastUpdate: new Date().getTime() - 86400000 * 365,
 };
 
-const oldest = async (db) => {
+const oldestTimestamp = async (db) => {
 	// see if the locally stored value needs to be updated (hourly)
 	if (new Date().getTime() - timestamp.lastUpdate > 3600000) {
 		// get a new timestamp from the database
@@ -20,4 +20,4 @@ const oldest = async (db) => {
 	return timestamp.value;
 };
 
-module.exports = oldest;
+export default oldestTimestamp;

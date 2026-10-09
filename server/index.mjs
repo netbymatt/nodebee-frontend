@@ -1,11 +1,13 @@
 // get configuration
-const express = require('express');
-const config = require('../utils/loadconfig');
-const updateVendor = require('./updatevendor');
+import express from 'express';
+import config from '../utils/loadconfig.mjs';
+import updateVendor from './updatevendor.mjs';
+import dataRouter from './data.mjs';
+import systemRouter from './system.mjs';
 
 // update vendor scripts
 if (process.env.NODE_ENV !== 'production') {
-	updateVendor();
+	await updateVendor();
 }
 
 // start a web server
@@ -13,8 +15,8 @@ if (process.env.NODE_ENV !== 'production') {
 const app = express();
 const { port } = config.server;
 
-app.use('/data', require('./data'));
-app.use('/system', require('./system'));
+app.use('/data', dataRouter);
+app.use('/system', systemRouter);
 
 // long-expiration header
 const longExpire = (res) => {

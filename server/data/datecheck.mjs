@@ -1,10 +1,10 @@
 // check for date within limits (dates are passed to the function as a timestamp in milliseconds)
 // return values as javascript dates
 
-const { DateTime } = require('luxon');
-const { MS_PER_DAY } = require('../constants');
+import { DateTime } from 'luxon';
+import { MS_PER_DAY } from '../constants.mjs';
 
-const check = (_start, _end) => {
+const dateCheck = (_start, _end) => {
 	let start = _start;
 	let end = _end;
 
@@ -25,4 +25,4 @@ const check = (_start, _end) => {
 	};
 };
 
-module.exports = check;
+export default dateCheck;

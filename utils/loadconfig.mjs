@@ -1,15 +1,14 @@
 // load configuration from user provided and then fall back to defaults
 
-const fs = require('fs');
-const path = require('path');
-const Defaults = require('../config-defaults');
-const objForEach = require('./objforeach');
+import Defaults from '../config-defaults.js';
+import objForEach from './objforeach.mjs';
 
 // see if the user config file is available
 let User = null;
-if (fs.existsSync(path.join(__dirname, '../config.js'))) {
-	// eslint-disable-next-line global-require
-	User = require('../config.js');
+try {
+	User = (await import('../config.js')).default;
+} catch (e) {
+	if (e.code !== 'ERR_MODULE_NOT_FOUND') throw e;
 }
 
 // combine each nested key in an object and fall back to default values if a user value is not provided
@@ -25,4 +24,6 @@ const combine = (user, defaults) => {
 	return result;
 };
 
-module.exports = combine(User, Defaults);
+const config = combine(User, Defaults);
+
+export default config;

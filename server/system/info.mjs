@@ -20,4 +20,4 @@ const systemInfo = async (db) => {
 	return info.value;
 };
 
-module.exports = systemInfo;
+export default systemInfo;

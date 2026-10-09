@@ -1,0 +1,14 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "lint:server",
+			"problemMatcher": [
+				"$eslint-stylish"
+			],
+			"label": "npm: lint:server",
+			"detail": "npx eslint server/"
+		}
+	]
+}
