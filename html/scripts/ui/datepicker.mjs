@@ -1,7 +1,6 @@
 // the date picker dialog: date range, interval, thermostat and quick links
 
 import state from '../state.mjs';
-import settings from '../utils/settings.mjs';
 import { getData } from '../data/load.mjs';
 import { closeDialog, openDialog } from './dialog.mjs';
 import quickRange from './quickrange.mjs';
@@ -107,13 +106,6 @@ const updateConfig = (quick) => {
 			end: DateTime.fromJSDate($('#enddate').datepicker('getDate')).endOf('day'),
 		};
 	const thermostat = $('#thermostats').val();
-
-	// remember the choices, quick links are stored by name so they are recalculated on the next visit
-	settings.save({
-		thermostat,
-		interval,
-		range: typeof quick === 'string' ? { quick } : { start: start.toMillis(), end: end.toMillis() },
-	});
 
 	// request is made in milliseconds since epoch, the maximum duration is checked by the server
 	getData(thermostat, start.toMillis(), end.toMillis(), interval === 'hourly', interval === 'daily');

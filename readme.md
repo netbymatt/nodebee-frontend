@@ -26,7 +26,7 @@ Data can be shown every 5 minutes, hourly or daily. Hourly and daily data are av
 - **Table** (table button): the same data as a table, limited to the time range visible on the chart. Double click the table to select it for copying.
 - **Dates and thermostat** (calendar button): choose a start and end date, the interval and the thermostat, or use a quick link such as *7 Days* or *30 Days*.
 
-The thermostat, date range, interval, hidden series and occupancy setting are remembered in your browser for the next visit. Quick links are remembered by name, so *7 Days* always shows the most recent 7 days.
+The app always opens with the last 7 days of 5 minute data for the first thermostat. Series turned off in the series dialog are remembered in your browser for the next visit.
 
 ## Requirements
 This tool requires a dataset from [NodeBee](https://github.com/netbymatt/nodebee). Please follow the setup procedures there first as they are only referenced below.

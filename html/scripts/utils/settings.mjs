@@ -1,30 +1,22 @@
-// remember the viewer's choices between visits in local storage
+// remember which series are turned off in the series dialog between visits, using local storage
 // storage can be unavailable (private browsing, blocked site data) in which case nothing is remembered
-//
-// stored values:
-// thermostat: thermostat id
-// interval: 'minute', 'hourly' or 'daily'
-// range: { quick: '<quick link name>' } recalculated on each visit, or { start, end } in milliseconds
-// hidden: names of series that are turned off
-// occupancy: true when only occupied temperatures are shown
+// everything else starts fresh on each visit
 
 const KEY = 'nodebee-settings';
 
-const load = () => {
+// names of series that are turned off
+export const loadHidden = () => {
 	try {
-		return JSON.parse(localStorage.getItem(KEY)) ?? {};
+		return JSON.parse(localStorage.getItem(KEY))?.hidden ?? [];
 	} catch {
-		return {};
+		return [];
 	}
 };
 
-// merge changes into the stored settings
-const save = (changes) => {
+export const saveHidden = (hidden) => {
 	try {
-		localStorage.setItem(KEY, JSON.stringify({ ...load(), ...changes }));
+		localStorage.setItem(KEY, JSON.stringify({ hidden }));
 	} catch {
 		// storage unavailable, settings are not remembered
 	}
 };
-
-export default { load, save };

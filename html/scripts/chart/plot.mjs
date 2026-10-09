@@ -46,11 +46,8 @@ export const plotData = (dataToPlot, xRange) => {
 	const chart = document.getElementById('chart');
 
 	// determine range of data to plot
-	let rangeXMin = xRange?.[0] ?? DateTime.fromMillis(metaData.minTimestamp).toISO();
+	const rangeXMin = xRange?.[0] ?? DateTime.fromMillis(metaData.minTimestamp).toISO();
 	const rangeXMax = xRange?.[1] ?? DateTime.fromMillis(metaData.maxTimestamp).toISO();
-	if (state.firstLoad && state.zoomOnFirstLoad) {
-		rangeXMin = DateTime.local().minus({ days: 1 }).startOf('day').toISO();
-	}
 
 	// configure the layout
 	const layout = {

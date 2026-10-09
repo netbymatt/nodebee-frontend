@@ -1,7 +1,7 @@
 // the series dialog, turns series on and off
 
 import state from '../state.mjs';
-import settings from '../utils/settings.mjs';
+import { saveHidden } from '../utils/settings.mjs';
 import { seriesColor } from '../chart/style.mjs';
 import { refreshView } from '../view.mjs';
 import { openDialog } from './dialog.mjs';
@@ -12,7 +12,7 @@ const legendChange = (e) => {
 	state.visible[+e.currentTarget.value] = e.currentTarget.checked;
 
 	// remember which series are turned off
-	settings.save({ hidden: state.seriesInfo.filter((series, i) => !state.visible[i] && series.type !== 'occup').map((series) => series.name) });
+	saveHidden(state.seriesInfo.filter((series, i) => !state.visible[i] && series.type !== 'occup').map((series) => series.name));
 
 	refreshView();
 };

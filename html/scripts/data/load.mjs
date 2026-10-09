@@ -1,7 +1,7 @@
 // load thermostats and data from the server and display them
 
 import state from '../state.mjs';
-import settings from '../utils/settings.mjs';
+import { loadHidden } from '../utils/settings.mjs';
 import { fetchData, fetchSystem } from './api.mjs';
 import {
 	expandTimestamps, extractData, convertTimestamp, readSystemInfo, scanAllData,
@@ -40,7 +40,7 @@ const formatData = (json) => {
 	};
 
 	// set up visibility for first run if necessary, restoring any series that were turned off on a previous visit
-	const hidden = settings.load().hidden ?? [];
+	const hidden = loadHidden();
 	state.visible = state.seriesInfo.map((series, i) => ((state.firstLoad || state.visible[i] === undefined) ? !hidden.includes(series.name) : state.visible[i]));
 
 	// extract the plot options
@@ -106,25 +106,15 @@ export const getData = async (_thermostat, startDate, endDate, hourly, daily) =>
 };
 
 // get system info
-// then load data using the remembered thermostat, range and interval
+// then load the last 7 days of 5 minute data for the first thermostat
 export const getSystem = async () => {
 	setLoading(true);
 	try {
 		state.systemInfo = readSystemInfo(await fetchSystem());
 
-		// default to the first thermostat and the server's default range
-		const saved = settings.load();
-		const thermostat = state.systemInfo[saved.thermostat] ? saved.thermostat : Object.keys(state.systemInfo)[0];
-		let start;
-		let end;
-		if (saved.range?.quick) {
-			const range = quickRange(saved.range.quick);
-			start = range.start.toMillis();
-			end = range.end.toMillis();
-		} else if (saved.range) {
-			({ start, end } = saved.range);
-		}
-		getData(thermostat, start, end, saved.interval === 'hourly', saved.interval === 'daily');
+		const [thermostat] = Object.keys(state.systemInfo);
+		const { start, end } = quickRange('7 Days');
+		getData(thermostat, start.toMillis(), end.toMillis(), false, false);
 		listThermostats(state.systemInfo);
 		setThermostat(thermostat);
 	} catch (e) {
