@@ -9,7 +9,7 @@ const oldestTimestamp = async (db) => {
 	// see if the locally stored value needs to be updated (hourly)
 	if (new Date().getTime() - timestamp.lastUpdate > 3600000) {
 		// get a new timestamp from the database
-		const [result] = await db.query('SELECT MIN(`timestamp`) AS `oldest` FROM `runtime_report_thermostat`;');
+		const [result] = await db.query("SELECT MIN(`timestamp`) AS `oldest` FROM `runtime_report_thermostat` WHERE `timestamp` > '1970-01-01';");
 		if (result.length !== 1) throw new Error('Unable to find oldest timestamp');
 
 		// update the object
