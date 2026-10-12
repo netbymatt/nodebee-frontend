@@ -45,8 +45,9 @@ export const plotData = (dataToPlot, xRange) => {
 	// get the chart
 	const chart = document.getElementById('chart');
 
-	// determine range of data to plot
-	const rangeXMin = xRange?.[0] ?? DateTime.fromMillis(metaData.minTimestamp).toISO();
+	// determine range of data to plot, the first load starts at midnight yesterday
+	const firstMin = state.firstLoad ? DateTime.local().minus({ days: 1 }).startOf('day').toMillis() : metaData.minTimestamp;
+	const rangeXMin = xRange?.[0] ?? DateTime.fromMillis(Math.max(firstMin, metaData.minTimestamp)).toISO();
 	const rangeXMax = xRange?.[1] ?? DateTime.fromMillis(metaData.maxTimestamp).toISO();
 
 	// configure the layout
@@ -55,7 +56,7 @@ export const plotData = (dataToPlot, xRange) => {
 		showlegend: false,
 		barmode: 'overlay',
 		// one hover label with every value at that time
-		hovermode: 'x unified',
+		hovermode: state.hoverValues ? 'x unified' : false,
 		dragmode: 'pan',
 		margin: {
 			l: 30, r: 30, b: 40, t: 30,

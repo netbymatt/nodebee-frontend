@@ -22,6 +22,7 @@ Data can be shown every 5 minutes, hourly or daily. Hourly and daily data are av
 ## Using the app
 - **Pan and zoom**: drag to pan, scroll or pinch to zoom. The chart stays within the loaded data, load a different range to see other dates.
 - **Series** (list button, top left): turn individual series on and off. Each one is shown with its color on the chart.
+- **Hover values** (pointer button, computers only): show every value at the mouse pointer's time. Off by default. On phones and tablets, tapping the chart always shows the values.
 - **Occupancy** (people button): only show room temperatures while the room's occupancy sensor detects someone. Only available with 5 minute data.
 - **Table** (table button): the same data as a table, limited to the time range visible on the chart. Double click the table to select it for copying.
 - **Dates and thermostat** (calendar button): choose a start and end date, the interval and the thermostat, or use a quick link such as *7 Days* or *30 Days*.

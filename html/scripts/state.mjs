@@ -15,6 +15,7 @@ const state = {
 	visible: [],	// show this series
 	firstLoad: true,
 	occupancyOnly: false,	// only show room temperatures while the room is occupied
+	hoverValues: true,	// show every value at the pointer's time, optional on devices with a mouse
 };
 
 export default state;
